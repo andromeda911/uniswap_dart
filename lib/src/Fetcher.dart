@@ -5,6 +5,7 @@ import 'package:uniswap_dart/src/core/TokenAmount.dart';
 import 'package:web3dart/web3dart.dart';
 
 abstract class Fetcher {
+  // TODO: add cache
   static Future<Token> fetchTokenData(Web3Client web3client, int chainId, EthereumAddress address, [String symbol, String name]) async {
     var contract = DeployedContract(UniswapV2PairABI, address);
     var resp = await web3client.call(contract: contract, function: contract.function('decimals'), params: []);

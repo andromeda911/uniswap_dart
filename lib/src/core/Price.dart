@@ -1,6 +1,11 @@
 import 'package:decimal/decimal.dart';
 
+import 'Currency.dart';
+
 class Price {
-  Decimal baseCurrency;
-  Decimal quoteCurrency;
+  Currency baseCurrency;
+  Currency quoteCurrency;
+  Decimal price;
+
+  Price(this.baseCurrency, this.quoteCurrency, this.price);
 }

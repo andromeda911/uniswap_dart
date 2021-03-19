@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:decimal/decimal.dart';
 import 'package:uniswap_dart/src/constants.dart';
 import 'package:uniswap_dart/src/core/Currency.dart';
 
@@ -44,7 +45,11 @@ class Route {
   Price midPrice() {
     var prices = <Price>[];
     pairs.forEachIndexed((pair, i) {
-      prices.add(path[i] == pair.token0 ? Price(pair.reserve0.token) : Price());
+      prices.add(path[i] == pair.token0
+          ? Price(pair.reserve0.token, pair.reserve1.token, Decimal.parse('${pair.reserve1.amount.getInWei / pair.reserve0.amount.getInWei}'))
+          : Price(pair.reserve1.token, pair.reserve0.token, Decimal.parse('${pair.reserve0.amount.getInWei / pair.reserve1.amount.getInWei}')));
     });
+
+    return prices.reduce((value, element) => Price(value.baseCurrency, element.quoteCurrency, value.price * element.price));
   }
 }
