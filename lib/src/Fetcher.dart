@@ -1,7 +1,7 @@
 import 'package:uniswap_dart/src/constants.dart';
 import 'package:uniswap_dart/src/core/Pair.dart';
-import 'package:uniswap_dart/src/core/Token.dart';
-import 'package:uniswap_dart/src/core/TokenAmount.dart';
+import 'package:uniswap_dart/src/core/token/Token.dart';
+import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/web3dart.dart';
 
 abstract class Fetcher {

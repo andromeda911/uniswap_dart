@@ -1,6 +1,6 @@
 import 'package:uniswap_dart/src/constants.dart';
 import 'package:web3dart/credentials.dart';
-import 'Currency.dart';
+import '../currency/Currency.dart';
 
 class Token extends Currency {
   int chainId;
@@ -21,6 +21,9 @@ class Token extends Currency {
       return false;
     }
   }
+
+  @override
+  int get hashCode => chainId.hashCode ^ address.hashCode;
 
   bool sortsBefore(Token other) {
     // TODO : check chain ids and addresses: @core/token.ts:37

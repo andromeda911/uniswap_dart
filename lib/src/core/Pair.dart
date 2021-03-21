@@ -1,12 +1,12 @@
 import 'dart:typed_data' show Uint8List;
 
-import 'package:uniswap_dart/src/core/TokenAmount.dart';
+import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
 
 import '../constants.dart';
-import 'Token.dart';
+import 'token/Token.dart';
 
 EthereumAddress computePairAddress(EthereumAddress factoryAddress, Token tokenA, Token tokenB) {
   var tokens = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA];
@@ -53,4 +53,64 @@ class Pair {
   TokenAmount get reserve1 => tokenAmounts[1];
 
   bool involvesToken(Token token) => token == token0 || token == token1;
+  TokenAmount reserveOf(Token token) {
+    assert(involvesToken(token));
+    return token == token0 ? reserve0 : reserve1;
+  }
+
+  /// returns list of values :
+  /// 0 = outputAmount : [TokenAmount]
+  /// 1 = nextPair : [Pair]
+  List<dynamic> getOutputAmount(TokenAmount inputAmount) {
+    assert(involvesToken(inputAmount.token));
+
+    if (reserve0.value.getInWei == BigInt.zero || reserve1.value.getInWei == BigInt.zero) {
+      throw InsufficientReservesError();
+    }
+    var inputReserve = reserveOf(inputAmount.token);
+    var outputToken = inputAmount.token == token0 ? token1 : token0;
+    var outputReserve = reserveOf(outputToken);
+
+    var inputAmountWithFee = inputAmount.value.getInWei * BigInt.from(997);
+
+    var outputAmount = TokenAmount(
+      outputToken,
+      EtherAmount.inWei((inputAmountWithFee * outputReserve.value.getInWei) ~/ (inputReserve.value.getInWei * BigInt.from(1000) + inputAmountWithFee)),
+    );
+
+    if (outputAmount.value.getInWei == BigInt.zero) {
+      throw InsufficientInputAmountError();
+    }
+    return [outputAmount, Pair(inputReserve + inputAmount, outputReserve - outputAmount)];
+  }
+
+  /// returns list of values :
+  /// 0 = inputAmount : [TokenAmount]
+  /// 1 = nextPair : [Pair]
+  List<dynamic> getInputAmount(TokenAmount outputAmount) {
+    assert(involvesToken(outputAmount.token));
+
+    print(reserve0.value.getInWei == BigInt.zero);
+    print(reserve1.value.getInWei == BigInt.zero);
+
+    print(outputAmount.value.getInWei >= reserveOf(outputAmount.token).value.getInWei);
+    print(outputAmount.value.getInWei);
+    print(reserveOf(outputAmount.token).value.getInWei);
+
+    if (reserve0.value.getInWei == BigInt.zero || reserve1.value.getInWei == BigInt.zero || outputAmount.value.getInWei >= reserveOf(outputAmount.token).value.getInWei) {
+      throw InsufficientReservesError();
+    }
+    var outputReserve = reserveOf(outputAmount.token);
+    var inputToken = outputAmount.token == token0 ? token1 : token0;
+    var inputReserve = reserveOf(inputToken);
+
+    var inputAmount = TokenAmount(
+      inputToken,
+      EtherAmount.inWei(
+        ((inputReserve.value.getInWei * outputAmount.value.getInWei) * BigInt.from(1000) ~/ (outputReserve.value.getInWei * outputAmount.value.getInWei) * BigInt.from(997)) + BigInt.one,
+      ),
+    );
+
+    return [inputAmount, Pair(inputReserve + inputAmount, outputReserve - outputAmount)];
+  }
 }

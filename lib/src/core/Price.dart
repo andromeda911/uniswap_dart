@@ -1,6 +1,6 @@
 import 'package:decimal/decimal.dart';
 
-import 'Currency.dart';
+import 'currency/Currency.dart';
 
 class Price {
   Currency baseCurrency;

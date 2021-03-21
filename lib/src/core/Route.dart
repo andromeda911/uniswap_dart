@@ -2,11 +2,11 @@ import 'dart:developer';
 
 import 'package:decimal/decimal.dart';
 import 'package:uniswap_dart/src/constants.dart';
-import 'package:uniswap_dart/src/core/Currency.dart';
+import 'package:uniswap_dart/src/core/currency/Currency.dart';
 
 import 'Pair.dart';
 import 'Price.dart';
-import 'Token.dart';
+import 'token/Token.dart';
 
 class Route {
   List<Pair> pairs;
@@ -22,7 +22,7 @@ class Route {
     assert(pairs.every((pair) => pair.chainId == chainId));
 
     final weth = WETH9[chainId];
-
+    //print((input is Token && pairs.first.involvesToken(input)));
     assert((input is Token && pairs.first.involvesToken(input)) || (input == Currency.ETHER && pairs.first.involvesToken(input)));
     assert(output == null || (output is Token && pairs.last.involvesToken(output)) || (output == Currency.ETHER && pairs.last.involvesToken(output)));
 
@@ -45,9 +45,11 @@ class Route {
   Price midPrice() {
     var prices = <Price>[];
     pairs.forEachIndexed((pair, i) {
-      prices.add(path[i] == pair.token0
-          ? Price(pair.reserve0.token, pair.reserve1.token, Decimal.parse('${pair.reserve1.amount.getInWei / pair.reserve0.amount.getInWei}'))
-          : Price(pair.reserve1.token, pair.reserve0.token, Decimal.parse('${pair.reserve0.amount.getInWei / pair.reserve1.amount.getInWei}')));
+      if (path[i] == pair.token0) {
+        prices.add(Price(pair.reserve0.token, pair.reserve1.token, Decimal.parse('${pair.reserve1.value.getInWei / pair.reserve0.value.getInWei}')));
+      } else {
+        prices.add(Price(pair.reserve1.token, pair.reserve0.token, Decimal.parse('${pair.reserve0.value.getInWei / pair.reserve1.value.getInWei}')));
+      }
     });
 
     return prices.reduce((value, element) => Price(value.baseCurrency, element.quoteCurrency, value.price * element.price));

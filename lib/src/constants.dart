@@ -1,9 +1,12 @@
+import 'package:uniswap_dart/src/core/currency/Currency.dart';
 import 'package:web3dart/contracts.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
 
 EthereumAddress FACTORY_ADDRESS = EthereumAddress.fromHex('0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f');
 String INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f';
+
+final ETHER = Currency.ETHER;
 
 class ChainId {
   static const int MAINNET = 1;
@@ -25,6 +28,23 @@ extension ExtendedIterable<E> on Iterable<E> {
   }
 }
 
+class InsufficientReservesError implements Exception {
+  const InsufficientReservesError();
+
+  @override
+  String toString() {
+    return 'InsufficientReservesErrorException';
+  }
+}
+
+class InsufficientInputAmountError implements Exception {
+  const InsufficientInputAmountError();
+
+  @override
+  String toString() {
+    return 'InsufficientInputAmountErrorException';
+  }
+}
 //extension EtherAmountOperators on EtherAmount {
 //  EtherAmount divide(EtherAmount other) {
 //    return EtherAmount.inWei(this.getInWei. / other.getInWei);
