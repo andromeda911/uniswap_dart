@@ -22,9 +22,9 @@ class Route {
     assert(pairs.every((pair) => pair.chainId == chainId));
 
     final weth = WETH9[chainId];
-    //print((input is Token && pairs.first.involvesToken(input)));
-    assert((input is Token && pairs.first.involvesToken(input)) || (input == Currency.ETHER && pairs.first.involvesToken(input)));
-    assert(output == null || (output is Token && pairs.last.involvesToken(output)) || (output == Currency.ETHER && pairs.last.involvesToken(output)));
+
+    assert((input is Token && pairs.first.involvesToken(input)) || (input == Currency.ETHER && pairs.first.involvesToken(weth)));
+    assert(output == null || (output is Token && pairs.last.involvesToken(output)) || (output == Currency.ETHER && pairs.last.involvesToken(weth)));
 
     path = <Token>[input is Token ? input : weth];
 

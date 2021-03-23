@@ -12,7 +12,7 @@ class Currency {
   bool operator ==(Object other) {
     if (other is Currency) {
       return decimals == other.decimals && symbol == other.symbol && name == other.name;
-    } else {
+    } else if (other) {
       return false;
     }
   }

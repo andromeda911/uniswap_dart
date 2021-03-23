@@ -8,7 +8,7 @@ class TokenAmount extends CurrencyAmount {
   TokenAmount(this.token, EtherAmount value) : super(token, value);
 
   @override
-  bool operator ==(covariant CurrencyAmount other) {
+  bool operator ==(covariant TokenAmount other) {
     return currency == other.currency && value == other.value;
   }
 

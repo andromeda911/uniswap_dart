@@ -17,6 +17,8 @@ class Token extends Currency {
   bool operator ==(Object other) {
     if (other is Token) {
       return chainId == other.chainId && address == other.address;
+    } else if (other is Currency) {
+      return decimals == other.decimals && symbol == other.symbol && name == other.name;
     } else {
       return false;
     }
@@ -26,7 +28,8 @@ class Token extends Currency {
   int get hashCode => chainId.hashCode ^ address.hashCode;
 
   bool sortsBefore(Token other) {
-    // TODO : check chain ids and addresses: @core/token.ts:37
+    assert(chainId == other.chainId);
+    assert(address != other.address);
     return address.hex.compareTo(other.address.hex) < 0;
   }
 }

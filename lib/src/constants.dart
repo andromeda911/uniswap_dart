@@ -3,10 +3,15 @@ import 'package:web3dart/contracts.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
 
-EthereumAddress FACTORY_ADDRESS = EthereumAddress.fromHex('0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f');
-String INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f';
+final FACTORY_ADDRESS = EthereumAddress.fromHex('0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f');
+final INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f';
+
+final MINIMUM_LIQUIDITY = BigInt.from(1000);
 
 final ETHER = Currency.ETHER;
+
+final BI997 = BigInt.from(997);
+final BI1000 = BigInt.from(1000);
 
 class ChainId {
   static const int MAINNET = 1;
@@ -44,6 +49,23 @@ class InsufficientInputAmountError implements Exception {
   String toString() {
     return 'InsufficientInputAmountErrorException';
   }
+}
+
+BigInt babylonianSqrt(BigInt y) {
+  var z = BigInt.zero;
+  BigInt x;
+
+  if (y > BigInt.from(3)) {
+    z = y;
+    x = y ~/ BigInt.two + BigInt.one;
+    while (x < z) {
+      z = x;
+      x = (y ~/ x + x) ~/ BigInt.two;
+    }
+  } else if (y != BigInt.zero) {
+    z = BigInt.one;
+  }
+  return z;
 }
 //extension EtherAmountOperators on EtherAmount {
 //  EtherAmount divide(EtherAmount other) {
