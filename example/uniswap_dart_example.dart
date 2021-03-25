@@ -39,7 +39,7 @@ void main() async {
     maxNumResults: 1,
   );
 
-  print(result.length);
+  print(MaxUint256);
 }
 
 // import { Contract } from "@ethersproject/contracts";

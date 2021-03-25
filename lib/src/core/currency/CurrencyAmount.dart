@@ -6,10 +6,12 @@ import '../../constants.dart';
 class CurrencyAmount {
   Currency currency;
   EtherAmount value;
-  CurrencyAmount(this.currency, this.value);
+  CurrencyAmount(this.currency, this.value) {
+    assert(value.getInWei <= MaxUint256);
+  }
 
-  CurrencyAmount.ether(this.value) {
-    currency = ETHER;
+  static CurrencyAmount ether(EtherAmount value) {
+    return CurrencyAmount(ETHER, value);
   }
 
   @override
