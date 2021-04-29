@@ -20,4 +20,9 @@ class Price {
 
   @override
   int get hashCode => baseCurrency.hashCode ^ quoteCurrency.hashCode ^ price.hashCode;
+
+  @override
+  String toString() {
+    return '${baseCurrency.symbol} / ${quoteCurrency.symbol} : $price';
+  }
 }

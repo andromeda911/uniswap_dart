@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:test/test.dart';
-import 'package:uniswap_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
 
 void main() {
   group('babylonianSqrt()', () {

@@ -1,7 +1,7 @@
-import 'package:uniswap_dart/src/constants.dart';
-import 'package:uniswap_dart/src/core/Pair.dart';
-import 'package:uniswap_dart/src/core/token/Token.dart';
-import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/core/Pair.dart';
+import 'package:uniswap_sdk_dart/src/core/token/Token.dart';
+import 'package:uniswap_sdk_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/web3dart.dart';
 
 abstract class Fetcher {
@@ -21,10 +21,6 @@ abstract class Fetcher {
     var tokenAmount0 = TokenAmount(tokens[0], EtherAmount.inWei(resp[0] as BigInt));
     var tokenAmount1 = TokenAmount(tokens[1], EtherAmount.inWei(resp[1] as BigInt));
 
-    return Pair(
-      tokenAmount0,
-      tokenAmount1,
-      Token(tokenA.chainId, pairAddress, 18, 'UNI-V2', 'Uniswap V2'),
-    );
+    return Pair(tokenAmount0, tokenAmount1);
   }
 }

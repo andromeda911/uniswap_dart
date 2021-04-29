@@ -1,7 +1,6 @@
 import 'dart:typed_data' show Uint8List;
 
-import 'package:decimal/decimal.dart';
-import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
+import 'package:uniswap_sdk_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
@@ -30,7 +29,7 @@ class Pair {
 
   List<TokenAmount> _tokenAmounts;
 
-  Pair(TokenAmount tokenAmountA, TokenAmount tokenAmountB, [this.liquidityToken]) {
+  Pair(TokenAmount tokenAmountA, TokenAmount tokenAmountB) {
     _tokenAmounts = tokenAmountA.token.sortsBefore(tokenAmountB.token) ? [tokenAmountA, tokenAmountB] : [tokenAmountB, tokenAmountA];
 
     liquidityToken ??= Token(
@@ -42,9 +41,9 @@ class Pair {
     );
   }
 
-  Price get token0Price => Price(token0, token1, Decimal.parse('${_tokenAmounts[0].value.getInWei / _tokenAmounts[1].value.getInWei}'));
+  Price get token0Price => Price(token0, token1, _tokenAmounts[1].value / _tokenAmounts[0].value);
 
-  Price get token1Price => Price(token1, token0, Decimal.parse('${_tokenAmounts[1].value.getInWei / _tokenAmounts[0].value.getInWei}'));
+  Price get token1Price => Price(token1, token0, _tokenAmounts[0].value / _tokenAmounts[1].value);
 
   Price priceOf(Token token) {
     assert(involvesToken(token));
@@ -75,21 +74,21 @@ class Pair {
   List<dynamic> getOutputAmount(TokenAmount inputAmount) {
     assert(involvesToken(inputAmount.token));
 
-    if (reserve0.value.getInWei == BigInt.zero || reserve1.value.getInWei == BigInt.zero) {
+    if (reserve0.raw.getInWei == BigInt.zero || reserve1.raw.getInWei == BigInt.zero) {
       throw InsufficientReservesError();
     }
     var inputReserve = reserveOf(inputAmount.token);
     var outputToken = inputAmount.token == token0 ? token1 : token0;
     var outputReserve = reserveOf(outputToken);
 
-    var inputAmountWithFee = inputAmount.value.getInWei * BI997;
+    var inputAmountWithFee = inputAmount.raw.getInWei * BI997;
 
     var outputAmount = TokenAmount(
       outputToken,
-      EtherAmount.inWei((inputAmountWithFee * outputReserve.value.getInWei) ~/ (inputReserve.value.getInWei * BI1000 + inputAmountWithFee)),
+      EtherAmount.inWei((inputAmountWithFee * outputReserve.raw.getInWei) ~/ (inputReserve.raw.getInWei * BI1000 + inputAmountWithFee)),
     );
 
-    if (outputAmount.value.getInWei == BigInt.zero) {
+    if (outputAmount.raw.getInWei == BigInt.zero) {
       throw InsufficientInputAmountError();
     }
     return [outputAmount, Pair(inputReserve + inputAmount, outputReserve - outputAmount)];
@@ -101,14 +100,14 @@ class Pair {
   List<dynamic> getInputAmount(TokenAmount outputAmount) {
     assert(involvesToken(outputAmount.token));
 
-    if (reserve0.value.getInWei == BigInt.zero || reserve1.value.getInWei == BigInt.zero || outputAmount.value.getInWei >= reserveOf(outputAmount.token).value.getInWei) {
+    if (reserve0.raw.getInWei == BigInt.zero || reserve1.raw.getInWei == BigInt.zero || outputAmount.raw.getInWei >= reserveOf(outputAmount.token).raw.getInWei) {
       throw InsufficientReservesError();
     }
     var outputReserve = reserveOf(outputAmount.token);
     var inputToken = outputAmount.token == token0 ? token1 : token0;
     var inputReserve = reserveOf(inputToken);
-    var numerator = inputReserve.value.getInWei * outputAmount.value.getInWei * BI1000;
-    var denominator = (outputReserve.value.getInWei - outputAmount.value.getInWei) * BI997;
+    var numerator = inputReserve.raw.getInWei * outputAmount.raw.getInWei * BI1000;
+    var denominator = (outputReserve.raw.getInWei - outputAmount.raw.getInWei) * BI997;
 
     var inputAmount = TokenAmount(
       inputToken,
@@ -131,11 +130,11 @@ class Pair {
 
     EtherAmount liquidity;
 
-    if (totalSupply.value == EtherAmount.zero()) {
-      liquidity = EtherAmount.inWei(babylonianSqrt(tokenAmounts[0].value.getInWei * tokenAmounts[1].value.getInWei) - MINIMUM_LIQUIDITY);
+    if (totalSupply.raw == EtherAmount.zero()) {
+      liquidity = EtherAmount.inWei(babylonianSqrt(tokenAmounts[0].raw.getInWei * tokenAmounts[1].raw.getInWei) - MINIMUM_LIQUIDITY);
     } else {
-      var amount0 = (tokenAmounts[0].value.getInWei * totalSupply.value.getInWei) ~/ reserve0.value.getInWei;
-      var amount1 = (tokenAmounts[1].value.getInWei * totalSupply.value.getInWei) ~/ reserve1.value.getInWei;
+      var amount0 = (tokenAmounts[0].raw.getInWei * totalSupply.raw.getInWei) ~/ reserve0.raw.getInWei;
+      var amount1 = (tokenAmounts[1].raw.getInWei * totalSupply.raw.getInWei) ~/ reserve1.raw.getInWei;
 
       liquidity = EtherAmount.inWei(amount0 >= amount1 ? amount0 : amount1);
     }
@@ -155,22 +154,31 @@ class Pair {
     assert(involvesToken(token));
     assert(totalSupply.token == liquidityToken);
     assert(liquidity.token == liquidityToken);
-    assert(liquidity.value.getInWei <= totalSupply.value.getInWei);
-
+    assert(liquidity.raw.getInWei <= totalSupply.raw.getInWei);
     TokenAmount totalSupplyAdjusted;
 
     if (!feeOn) {
       totalSupplyAdjusted = totalSupply;
+      print(1);
     } else {
       assert(kLast != null);
       if (kLast != BigInt.zero) {
-        var rootK = babylonianSqrt(reserve0.value.getInWei * reserve1.value.getInWei);
+        var rootK = babylonianSqrt(reserve0.raw.getInWei * reserve1.raw.getInWei);
         var rootKLast = babylonianSqrt(kLast);
+        print(2);
+        print(rootK);
+        print(rootKLast);
+
         if (rootK > rootKLast) {
-          final numerator = totalSupply.value.getInWei * (rootK - rootKLast);
+          final numerator = totalSupply.raw.getInWei * (rootK - rootKLast);
           final denominator = rootK * BigInt.from(5) + rootKLast;
           final feeLiquidity = numerator ~/ denominator;
+          print(numerator);
+          print(denominator);
+          print(feeLiquidity);
+
           totalSupplyAdjusted = totalSupply + TokenAmount(liquidityToken, EtherAmount.inWei(feeLiquidity));
+          print(totalSupplyAdjusted.raw.getInWei);
         } else {
           totalSupplyAdjusted = totalSupply;
         }
@@ -181,7 +189,19 @@ class Pair {
 
     return TokenAmount(
       token,
-      EtherAmount.inWei((liquidity.value.getInWei * reserveOf(token).value.getInWei) ~/ totalSupplyAdjusted.value.getInWei),
+      EtherAmount.inWei((liquidity.raw.getInWei * reserveOf(token).raw.getInWei) ~/ totalSupplyAdjusted.raw.getInWei),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Pair) {
+      return token0.address == other.token0.address && token1.address == other.token1.address && chainId == other.chainId;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  int get hashCode => token0.hashCode ^ token1.hashCode;
 }

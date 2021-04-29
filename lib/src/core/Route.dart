@@ -1,8 +1,5 @@
-import 'dart:developer';
-
-import 'package:decimal/decimal.dart';
-import 'package:uniswap_dart/src/constants.dart';
-import 'package:uniswap_dart/src/core/currency/Currency.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/core/currency/Currency.dart';
 
 import 'Pair.dart';
 import 'Price.dart';
@@ -21,7 +18,7 @@ class Route {
 
     assert(pairs.every((pair) => pair.chainId == chainId));
 
-    final weth = WETH9[chainId];
+    final weth = WETH[chainId];
 
     assert((input is Token && pairs.first.involvesToken(input)) || (input == Currency.ETHER && pairs.first.involvesToken(weth)));
     assert(output == null || (output is Token && pairs.last.involvesToken(output)) || (output == Currency.ETHER && pairs.last.involvesToken(weth)));
@@ -46,9 +43,9 @@ class Route {
     var prices = <Price>[];
     pairs.forEachIndexed((pair, i) {
       if (path[i] == pair.token0) {
-        prices.add(Price(pair.reserve0.token, pair.reserve1.token, Decimal.parse('${pair.reserve1.value.getInWei / pair.reserve0.value.getInWei}')));
+        prices.add(Price(pair.reserve0.token, pair.reserve1.token, pair.reserve1.value / pair.reserve0.value));
       } else {
-        prices.add(Price(pair.reserve1.token, pair.reserve0.token, Decimal.parse('${pair.reserve0.value.getInWei / pair.reserve1.value.getInWei}')));
+        prices.add(Price(pair.reserve1.token, pair.reserve0.token, pair.reserve0.value / pair.reserve1.value));
       }
     });
 

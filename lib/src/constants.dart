@@ -1,7 +1,9 @@
-import 'package:uniswap_dart/src/core/currency/Currency.dart';
+import 'package:decimal/decimal.dart';
+import 'package:uniswap_sdk_dart/src/core/currency/Currency.dart';
 import 'package:web3dart/contracts.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
+import 'dart:math' show pow;
 
 final FACTORY_ADDRESS = EthereumAddress.fromHex('0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f');
 final INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f';
@@ -74,3 +76,29 @@ BigInt babylonianSqrt(BigInt y) {
 //    return EtherAmount.inWei(this.getInWei. / other.getInWei);
 //  }
 //}
+//
+
+BigInt toWeiBigInt(Decimal amount, int decimals) {
+  return BigInt.parse((amount * Decimal.parse('${BigInt.from(10).pow(decimals)}')).toInt().toString());
+}
+
+extension EtherAmountExt on EtherAmount {
+  Decimal weiToDecimalEther(int decimals) {
+    var parsed = DecimalExt.fromBigInt(getInWei);
+    if (parsed != null) {
+      return parsed / Decimal.fromInt(pow(10, decimals));
+    } else {
+      return Decimal.zero;
+    }
+  }
+}
+
+extension DecimalExt on Decimal {
+  static Decimal fromNum(num from) {
+    return Decimal.tryParse(from.toString());
+  }
+
+  static Decimal fromBigInt(BigInt from) {
+    return Decimal.tryParse(from.toString());
+  }
+}

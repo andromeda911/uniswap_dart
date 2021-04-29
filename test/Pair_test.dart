@@ -1,10 +1,10 @@
 import 'package:decimal/decimal.dart';
 import 'package:test/test.dart';
-import 'package:uniswap_dart/src/constants.dart';
-import 'package:uniswap_dart/src/core/Pair.dart';
-import 'package:uniswap_dart/src/core/Price.dart';
-import 'package:uniswap_dart/src/core/token/Token.dart';
-import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/core/Pair.dart';
+import 'package:uniswap_sdk_dart/src/core/Price.dart';
+import 'package:uniswap_sdk_dart/src/core/token/Token.dart';
+import 'package:uniswap_sdk_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -42,7 +42,7 @@ void main() {
     group('constructor', () {
       test('cannot be used for tokens on different chains', () {
         expect(
-          () => Pair(TokenAmount(USDC, EtherAmount.inWei(BigInt.from(100))), TokenAmount(WETH9[ChainId.RINKEBY], EtherAmount.inWei(BigInt.from(100)))),
+          () => Pair(TokenAmount(USDC, EtherAmount.inWei(BigInt.from(100))), TokenAmount(WETH[ChainId.RINKEBY], EtherAmount.inWei(BigInt.from(100)))),
           throwsA(isA<AssertionError>()),
         );
       });
@@ -123,13 +123,13 @@ void main() {
               TokenAmount(USDC, EtherAmount.inWei(BigInt.from(101))),
               TokenAmount(DAI, EtherAmount.inWei(BigInt.from(100))),
             ).token0Price,
-            equals(Price(DAI, USDC, Decimal.parse('${100 / 101}'))));
+            equals(Price(DAI, USDC, Decimal.fromInt(101) / Decimal.fromInt(100))));
         expect(
             Pair(
               TokenAmount(DAI, EtherAmount.inWei(BigInt.from(100))),
               TokenAmount(USDC, EtherAmount.inWei(BigInt.from(101))),
             ).token0Price,
-            equals(Price(DAI, USDC, Decimal.parse('${100 / 101}'))));
+            equals(Price(DAI, USDC, Decimal.fromInt(101) / Decimal.fromInt(100))));
       });
     });
     group('.token1Price()', () {
@@ -139,13 +139,13 @@ void main() {
               TokenAmount(USDC, EtherAmount.inWei(BigInt.from(101))),
               TokenAmount(DAI, EtherAmount.inWei(BigInt.from(100))),
             ).token1Price,
-            equals(Price(USDC, DAI, Decimal.parse('${101 / 100}'))));
+            equals(Price(USDC, DAI, Decimal.fromInt(100) / Decimal.fromInt(101))));
         expect(
             Pair(
               TokenAmount(DAI, EtherAmount.inWei(BigInt.from(100))),
               TokenAmount(USDC, EtherAmount.inWei(BigInt.from(101))),
             ).token1Price,
-            equals(Price(USDC, DAI, Decimal.parse('${101 / 100}'))));
+            equals(Price(USDC, DAI, Decimal.fromInt(100) / Decimal.fromInt(101))));
       });
     });
     group('.priceOf()', () {
@@ -159,7 +159,7 @@ void main() {
       });
 
       test('throws if invalid token', () {
-        expect(() => pair.priceOf(WETH9[ChainId.MAINNET]), throwsA(isA<AssertionError>()));
+        expect(() => pair.priceOf(WETH[ChainId.MAINNET]), throwsA(isA<AssertionError>()));
       });
     });
     group('.geserveOf()', () {
@@ -182,7 +182,7 @@ void main() {
             () => Pair(
                   TokenAmount(DAI, EtherAmount.inWei(BigInt.from(101))),
                   TokenAmount(USDC, EtherAmount.inWei(BigInt.from(100))),
-                ).reserveOf(WETH9[ChainId.MAINNET]),
+                ).reserveOf(WETH[ChainId.MAINNET]),
             throwsA(isA<AssertionError>()));
       });
     });
@@ -225,7 +225,7 @@ void main() {
           Pair(
             TokenAmount(USDC, EtherAmount.inWei(BigInt.from(100))),
             TokenAmount(DAI, EtherAmount.inWei(BigInt.from(101))),
-          ).involvesToken(WETH9[ChainId.MAINNET]),
+          ).involvesToken(WETH[ChainId.MAINNET]),
           equals(false),
         );
       });
@@ -261,7 +261,7 @@ void main() {
           TokenAmount(tokenB, EtherAmount.inWei(BigInt.from(1001))),
         );
 
-        expect(liquidity.value, EtherAmount.inWei(BigInt.one));
+        expect(liquidity.raw, EtherAmount.inWei(BigInt.one));
       });
       test('.getLiquidityMinted():!0', () {
         final tokenA = Token(ChainId.RINKEBY, EthereumAddress.fromHex('0x0000000000000000000000000000000000000001'), 18);
@@ -277,7 +277,7 @@ void main() {
                 TokenAmount(tokenA, EtherAmount.inWei(BigInt.from(2000))),
                 TokenAmount(tokenB, EtherAmount.inWei(BigInt.from(2000))),
               )
-              .value,
+              .raw,
           equals(EtherAmount.inWei(BigInt.from(2000))),
         );
       });
@@ -297,7 +297,7 @@ void main() {
           false,
         );
         expect(liquidityValue.token, equals(tokenA));
-        expect(liquidityValue.value.getInWei, equals(BigInt.from(1000)));
+        expect(liquidityValue.raw.getInWei, equals(BigInt.from(1000)));
 
         liquidityValue = pair.getLiquidityValue(
           tokenA,
@@ -307,7 +307,7 @@ void main() {
           false,
         );
         expect(liquidityValue.token, equals(tokenA));
-        expect(liquidityValue.value.getInWei, equals(BigInt.from(500)));
+        expect(liquidityValue.raw.getInWei, equals(BigInt.from(500)));
 
         liquidityValue = pair.getLiquidityValue(
           tokenB,
@@ -317,7 +317,7 @@ void main() {
           false,
         );
         expect(liquidityValue.token, equals(tokenB));
-        expect(liquidityValue.value.getInWei, equals(BigInt.from(1000)));
+        expect(liquidityValue.raw.getInWei, equals(BigInt.from(1000)));
       });
 
       test('.getLiquidityValue():feeOn', () {
@@ -329,14 +329,14 @@ void main() {
         );
         var liquidityValue = pair.getLiquidityValue(
           tokenA,
-          TokenAmount(pair.liquidityToken, EtherAmount.inWei(BigInt.from(1000))),
-          TokenAmount(pair.liquidityToken, EtherAmount.inWei(BigInt.from(1000))),
+          TokenAmount(pair.liquidityToken, EtherAmount.inWei(BigInt.from(500))),
+          TokenAmount(pair.liquidityToken, EtherAmount.inWei(BigInt.from(500))),
           BigInt.from(250000),
           true,
         );
 
         expect(liquidityValue.token, equals(tokenA));
-        expect(liquidityValue.value.getInWei, equals(BigInt.from(917)));
+        expect(liquidityValue.raw.getInWei, equals(BigInt.from(917)));
       });
     });
   });

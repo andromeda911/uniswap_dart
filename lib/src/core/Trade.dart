@@ -15,19 +15,21 @@ enum TradeType { EXACT_INPUT, EXACT_OUTPUT }
 
 TokenAmount wrappedAmount(CurrencyAmount currencyAmount, int chainId) {
   if (currencyAmount is TokenAmount) return currencyAmount;
-  if (currencyAmount.currency == ETHER) return TokenAmount(WETH9[chainId], currencyAmount.value);
+  if (currencyAmount.currency == ETHER) return TokenAmount(WETH[chainId], currencyAmount.raw);
   assert(false);
+  return null;
 }
 
 Token wrappedCurrency(Currency currency, int chainId) {
   if (currency is Token) return currency;
-  if (currency == ETHER) return WETH9[chainId];
+  if (currency == ETHER) return WETH[chainId];
   assert(false);
+  return null;
 }
 
 Decimal computePriceImpact(Price midPrice, CurrencyAmount inputAmount, CurrencyAmount outputAmount) {
-  var exactQuote = midPrice.price * Decimal.parse('${inputAmount.value.getInWei}');
-  var slippage = (exactQuote - Decimal.parse('${outputAmount.value.getInWei}') / exactQuote);
+  var exactQuote = midPrice.price * inputAmount.value;
+  var slippage = (exactQuote - outputAmount.value / exactQuote);
   return slippage;
 }
 
@@ -40,14 +42,14 @@ int inputOutputComparator(InputOutput a, InputOutput b) {
       return 0;
     }
     // trade A requires less input than trade B, so A should come first
-    if (a.inputAmount.value.getInWei < b.inputAmount.value.getInWei) {
+    if (a.inputAmount.value < b.inputAmount.value) {
       return -1;
     } else {
       return 1;
     }
   } else {
     // tradeA has less output than trade B, so should come second
-    if (a.outputAmount.value.getInWei < b.outputAmount.value.getInWei) {
+    if (a.outputAmount.value < b.outputAmount.value) {
       return 1;
     } else {
       return -1;
@@ -120,16 +122,16 @@ class Trade {
     inputAmount = tradeType == TradeType.EXACT_INPUT
         ? amount
         : route.input == ETHER
-            ? CurrencyAmount.ether(EtherAmount.inWei(amounts.first.value.getInWei))
+            ? CurrencyAmount.ether(amounts.first.raw)
             : amounts.first;
 
     outputAmount = tradeType == TradeType.EXACT_OUTPUT
         ? amount
         : route.output == ETHER
-            ? CurrencyAmount.ether(EtherAmount.inWei(amounts.last.value.getInWei))
+            ? CurrencyAmount.ether(amounts.last.raw)
             : amounts.last;
 
-    executionPrice = Price(inputAmount.currency, outputAmount.currency, Decimal.parse('${inputAmount.value.getInWei / outputAmount.value.getInWei}'));
+    executionPrice = Price(inputAmount.currency, outputAmount.currency, outputAmount.value / inputAmount.value);
 
     priceImpact = computePriceImpact(route.midPrice(), inputAmount, outputAmount);
   }
@@ -147,8 +149,9 @@ class Trade {
     if (tradeType == TradeType.EXACT_OUTPUT) {
       return outputAmount;
     } else {
-      var slippageAdjustedAmountOut = (BigInt.from(((Decimal.one + slippageTolerancePercent / Decimal.fromInt(100)).inverse * Decimal.fromInt(10000)).ceil().toInt()) * outputAmount.value.getInWei) ~/ BigInt.from(10000);
-      return outputAmount is TokenAmount ? TokenAmount((outputAmount as TokenAmount).token, EtherAmount.inWei(slippageAdjustedAmountOut)) : CurrencyAmount.ether(EtherAmount.inWei(slippageAdjustedAmountOut));
+      var slippageAdjustedAmountOut = (Decimal.one + slippageTolerancePercent / Decimal.fromInt(100)).inverse * outputAmount.value;
+
+      return outputAmount is TokenAmount ? TokenAmount((outputAmount as TokenAmount).token, EtherAmount.inWei(toWeiBigInt(slippageAdjustedAmountOut, outputAmount.currency.decimals))) : CurrencyAmount.ether(EtherAmount.inWei(toWeiBigInt(slippageAdjustedAmountOut, outputAmount.currency.decimals)));
     }
   }
 
@@ -158,8 +161,9 @@ class Trade {
     if (tradeType == TradeType.EXACT_INPUT) {
       return inputAmount;
     } else {
-      var slippageAdjustedAmountIn = (BigInt.from(((Decimal.one + slippageTolerancePercent / Decimal.fromInt(100)) * Decimal.fromInt(10000)).ceil().toInt()) * inputAmount.value.getInWei) ~/ BigInt.from(10000);
-      return inputAmount is TokenAmount ? TokenAmount((inputAmount as TokenAmount).token, EtherAmount.inWei(slippageAdjustedAmountIn)) : CurrencyAmount.ether(EtherAmount.inWei(slippageAdjustedAmountIn));
+      var slippageAdjustedAmountIn = (Decimal.one + slippageTolerancePercent / Decimal.fromInt(100)) * inputAmount.value;
+
+      return inputAmount is TokenAmount ? TokenAmount((inputAmount as TokenAmount).token, EtherAmount.inWei(toWeiBigInt(slippageAdjustedAmountIn, inputAmount.currency.decimals))) : CurrencyAmount.ether(EtherAmount.inWei(toWeiBigInt(slippageAdjustedAmountIn, inputAmount.currency.decimals)));
     }
   }
 
@@ -198,7 +202,7 @@ class Trade {
       // pair irrelevant
       if (pair.token0 != amountIn.token && pair.token1 != amountIn.token) continue;
 
-      if (pair.reserve0.value.getInWei == BigInt.zero || pair.reserve1.value.getInWei == BigInt.zero) continue;
+      if (pair.reserve0.raw.getInWei == BigInt.zero || pair.reserve1.raw.getInWei == BigInt.zero) continue;
 
       TokenAmount amountOut;
       try {
@@ -223,15 +227,12 @@ class Trade {
 
         bestTrades.sort(tradeComparator);
         if (bestTrades.length > maxNumResults) {
-          bestTrades = bestTrades.sublist(0, maxNumResults);
-
-          bestTrades.removeRange(maxNumResults - 1, bestTrades.length - 1);
+          bestTrades.removeRange(maxNumResults, bestTrades.length);
         }
       } else if (maxHops > 1 && pairs.length > 1) {
         var pairsExcludingThisPair = [...(pairs.sublist(0, i)), ...(pairs.sublist(i + 1, pairs.length))];
 
         // otherwise, consider all the other paths that lead from this token as long as we have not exceeded maxHops
-
         Trade.bestTradeExactIn(
           pairsExcludingThisPair,
           amountOut,
@@ -282,7 +283,7 @@ class Trade {
       // pair irrelevant
       if (pair.token0 != amountOut.token && pair.token1 != amountOut.token) continue;
 
-      if (pair.reserve0.value.getInWei == BigInt.zero || pair.reserve1.value.getInWei == BigInt.zero) continue;
+      if (pair.reserve0.raw.getInWei == BigInt.zero || pair.reserve1.raw.getInWei == BigInt.zero) continue;
 
       TokenAmount amountIn;
       try {
@@ -307,7 +308,7 @@ class Trade {
 
         bestTrades.sort(tradeComparator);
         if (bestTrades.length > maxNumResults) {
-          bestTrades.removeRange(maxNumResults - 1, bestTrades.length - 1);
+          bestTrades.removeRange(maxNumResults, bestTrades.length);
         }
       } else if (maxHops > 1 && pairs.length > 1) {
         var pairsExcludingThisPair = [...(pairs.sublist(0, i)), ...(pairs.sublist(i + 1, pairs.length))];

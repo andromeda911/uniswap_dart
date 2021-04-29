@@ -8,7 +8,7 @@ Created from templates made available by Stagehand under a BSD-style
 A simple usage example:
 
 ```dart
-import 'package:uniswap_dart/uniswap_dart.dart';
+import 'package:uniswap_sdk_dart/uniswap_sdk_dart.dart';
 
 main() {
   var awesome = new Awesome();

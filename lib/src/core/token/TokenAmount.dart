@@ -5,7 +5,7 @@ import 'Token.dart';
 
 class TokenAmount extends CurrencyAmount {
   Token token;
-  TokenAmount(this.token, EtherAmount value) : super(token, value);
+  TokenAmount(this.token, EtherAmount raw) : super(token, raw);
 
   @override
   bool operator ==(covariant TokenAmount other) {
@@ -17,11 +17,16 @@ class TokenAmount extends CurrencyAmount {
 
   @override
   TokenAmount operator +(covariant TokenAmount other) {
-    return TokenAmount(token, EtherAmount.inWei(value.getInWei + other.value.getInWei));
+    return TokenAmount(token, EtherAmount.inWei(raw.getInWei + other.raw.getInWei));
   }
 
   @override
   TokenAmount operator -(covariant TokenAmount other) {
-    return TokenAmount(token, EtherAmount.inWei(value.getInWei - other.value.getInWei));
+    return TokenAmount(token, EtherAmount.inWei(raw.getInWei - other.raw.getInWei));
+  }
+
+  @override
+  String toString() {
+    return '${token.symbol}, ${raw.getInWei}';
   }
 }

@@ -1,7 +1,6 @@
-/// Support for doing something awesome.
 ///
 /// More dartdocs go here.
-library uniswap_dart;
+library uniswap_sdk_dart;
 
 export 'src/core/token/Token.dart';
 export 'src/core/token/TokenAmount.dart';
@@ -13,5 +12,3 @@ export 'src/core/Trade.dart';
 export 'src/core/Route.dart';
 export 'src/Fetcher.dart';
 export 'src/constants.dart';
-
-// TODO: Export any libraries intended for clients of this package.

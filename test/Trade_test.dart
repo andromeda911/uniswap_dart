@@ -1,13 +1,13 @@
 import 'package:test/test.dart';
 
 import 'package:decimal/decimal.dart';
-import 'package:uniswap_dart/src/constants.dart';
-import 'package:uniswap_dart/src/core/Pair.dart';
-import 'package:uniswap_dart/src/core/Route.dart';
-import 'package:uniswap_dart/src/core/Trade.dart';
-import 'package:uniswap_dart/src/core/currency/CurrencyAmount.dart';
-import 'package:uniswap_dart/src/core/token/Token.dart';
-import 'package:uniswap_dart/src/core/token/TokenAmount.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/core/Pair.dart';
+import 'package:uniswap_sdk_dart/src/core/Route.dart';
+import 'package:uniswap_sdk_dart/src/core/Trade.dart';
+import 'package:uniswap_sdk_dart/src/core/currency/CurrencyAmount.dart';
+import 'package:uniswap_sdk_dart/src/core/token/Token.dart';
+import 'package:uniswap_sdk_dart/src/core/token/TokenAmount.dart';
 import 'package:web3dart/web3dart.dart';
 
 final token0 = Token(ChainId.MAINNET, EthereumAddress.fromHex('0x0000000000000000000000000000000000000001'), 18, 't0');
@@ -22,7 +22,7 @@ final pair_1_2 = Pair(TokenAmount(token1, EtherAmount.inWei(BigInt.from(1200))),
 final pair_1_3 = Pair(TokenAmount(token1, EtherAmount.inWei(BigInt.from(1200))), TokenAmount(token3, EtherAmount.inWei(BigInt.from(1300))));
 
 final pair_weth_0 = Pair(
-  TokenAmount(WETH9[ChainId.MAINNET], EtherAmount.inWei(BigInt.from(1000))),
+  TokenAmount(WETH[ChainId.MAINNET], EtherAmount.inWei(BigInt.from(1000))),
   TokenAmount(token0, EtherAmount.inWei(BigInt.from(1300))),
 );
 
@@ -154,11 +154,11 @@ void main() {
 
         expect(result.length, equals(2));
         expect(result[0].inputAmount.currency == ETHER, equals(true));
-        expect(result[0].route.path, equals([WETH9[ChainId.MAINNET], token0, token1, token3]));
+        expect(result[0].route.path, equals([WETH[ChainId.MAINNET], token0, token1, token3]));
         expect(result[0].outputAmount.currency, equals(token3));
 
         expect(result[1].inputAmount.currency == ETHER, equals(true));
-        expect(result[1].route.path, equals([WETH9[ChainId.MAINNET], token0, token3]));
+        expect(result[1].route.path, equals([WETH[ChainId.MAINNET], token0, token3]));
         expect(result[1].outputAmount.currency, equals(token3));
       });
 
@@ -172,11 +172,11 @@ void main() {
         expect(result.length, equals(2));
 
         expect(result[0].inputAmount.currency, equals(token3));
-        expect(result[0].route.path, equals([token3, token0, WETH9[ChainId.MAINNET]]));
+        expect(result[0].route.path, equals([token3, token0, WETH[ChainId.MAINNET]]));
         expect(result[0].outputAmount.currency == ETHER, equals(true));
 
         expect(result[1].inputAmount.currency, equals(token3));
-        expect(result[1].route.path, equals([token3, token1, token0, WETH9[ChainId.MAINNET]]));
+        expect(result[1].route.path, equals([token3, token1, token0, WETH[ChainId.MAINNET]]));
         expect(result[1].outputAmount.currency == ETHER, equals(true));
       });
     });
@@ -276,11 +276,11 @@ void main() {
 
         expect(result.length, equals(2));
         expect(result[0].inputAmount.currency == ETHER, equals(true));
-        expect(result[0].route.path, equals([WETH9[ChainId.MAINNET], token0, token1, token3]));
+        expect(result[0].route.path, equals([WETH[ChainId.MAINNET], token0, token1, token3]));
         expect(result[0].outputAmount.currency, equals(token3));
 
         expect(result[1].inputAmount.currency == ETHER, equals(true));
-        expect(result[1].route.path, equals([WETH9[ChainId.MAINNET], token0, token3]));
+        expect(result[1].route.path, equals([WETH[ChainId.MAINNET], token0, token3]));
         expect(result[1].outputAmount.currency, equals(token3));
       });
 
@@ -294,11 +294,11 @@ void main() {
         expect(result.length, equals(2));
 
         expect(result[0].inputAmount.currency, equals(token3));
-        expect(result[0].route.path, equals([token3, token0, WETH9[ChainId.MAINNET]]));
+        expect(result[0].route.path, equals([token3, token0, WETH[ChainId.MAINNET]]));
         expect(result[0].outputAmount.currency == ETHER, equals(true));
 
         expect(result[1].inputAmount.currency, equals(token3));
-        expect(result[1].route.path, equals([token3, token1, token0, WETH9[ChainId.MAINNET]]));
+        expect(result[1].route.path, equals([token3, token1, token0, WETH[ChainId.MAINNET]]));
         expect(result[1].outputAmount.currency == ETHER, equals(true));
       });
     });
@@ -367,7 +367,7 @@ void main() {
         test('returns exact if 0', () {
           expect(exactOut.maximumAmountIn(Decimal.parse('0')), equals(exactOut.inputAmount));
         });
-        test('returns exact if nonzero', () {
+        test('returns slippage amount if nonzero', () {
           expect(exactOut.maximumAmountIn(Decimal.parse('0')), equals(TokenAmount(token0, EtherAmount.inWei(BigInt.from(156)))));
           expect(exactOut.maximumAmountIn(Decimal.parse('5')), equals(TokenAmount(token0, EtherAmount.inWei(BigInt.from(163)))));
           expect(exactOut.maximumAmountIn(Decimal.parse('200')), equals(TokenAmount(token0, EtherAmount.inWei(BigInt.from(468)))));

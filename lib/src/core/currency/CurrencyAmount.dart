@@ -1,13 +1,16 @@
-import 'package:uniswap_dart/src/core/currency/Currency.dart';
+import 'package:decimal/decimal.dart';
+import 'package:uniswap_sdk_dart/src/core/currency/Currency.dart';
 import 'package:web3dart/web3dart.dart';
 
 import '../../constants.dart';
 
 class CurrencyAmount {
   Currency currency;
-  EtherAmount value;
-  CurrencyAmount(this.currency, this.value) {
-    assert(value.getInWei <= MaxUint256);
+  EtherAmount raw;
+  Decimal value;
+  CurrencyAmount(this.currency, this.raw) {
+    assert(raw.getInWei <= MaxUint256);
+    value = raw.weiToDecimalEther(currency.decimals);
   }
 
   static CurrencyAmount ether(EtherAmount value) {
@@ -23,10 +26,10 @@ class CurrencyAmount {
   int get hashCode => currency.hashCode ^ value.hashCode;
 
   CurrencyAmount operator +(CurrencyAmount other) {
-    return CurrencyAmount(currency, EtherAmount.inWei(value.getInWei + other.value.getInWei));
+    return CurrencyAmount(currency, EtherAmount.inWei(raw.getInWei + raw.getInWei));
   }
 
   CurrencyAmount operator -(CurrencyAmount other) {
-    return CurrencyAmount(currency, EtherAmount.inWei(value.getInWei - other.value.getInWei));
+    return CurrencyAmount(currency, EtherAmount.inWei(raw.getInWei - raw.getInWei));
   }
 }

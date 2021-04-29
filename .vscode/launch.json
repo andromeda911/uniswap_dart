@@ -5,9 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "uniswap_dart",
+            "name": "uniswap_sdk_dart",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "example/uniswap_sdk_dart_example.dart"
         }
     ]
 }

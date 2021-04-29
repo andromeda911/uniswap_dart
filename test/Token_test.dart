@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
-import 'package:uniswap_dart/src/core/token/Token.dart';
+import 'package:uniswap_sdk_dart/src/core/token/Token.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:uniswap_dart/src/constants.dart';
+import 'package:uniswap_sdk_dart/src/constants.dart';
 
 void main() {
   group('Token', () {
