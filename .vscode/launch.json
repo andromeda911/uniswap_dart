@@ -8,7 +8,7 @@
             "name": "uniswap_sdk_dart",
             "request": "launch",
             "type": "dart",
-            "program": "example/uniswap_sdk_dart_example.dart"
+            "program": "bin/main.dart"
         }
     ]
 }

@@ -29,16 +29,17 @@ class Pair {
 
   List<TokenAmount> _tokenAmounts;
 
-  Pair(TokenAmount tokenAmountA, TokenAmount tokenAmountB) {
+  Pair(TokenAmount tokenAmountA, TokenAmount tokenAmountB, [Token liqToken]) {
     _tokenAmounts = tokenAmountA.token.sortsBefore(tokenAmountB.token) ? [tokenAmountA, tokenAmountB] : [tokenAmountB, tokenAmountA];
 
-    liquidityToken ??= Token(
-      _tokenAmounts.first.token.chainId,
-      Pair.getAddress(_tokenAmounts[0].token, _tokenAmounts[1].token),
-      18,
-      'UNI-V2',
-      'Uniswap V2',
-    );
+    liquidityToken ??= liqToken ??
+        Token(
+          _tokenAmounts.first.token.chainId,
+          Pair.getAddress(_tokenAmounts[0].token, _tokenAmounts[1].token),
+          18,
+          'UNI-V2',
+          'Uniswap V2',
+        );
   }
 
   Price get token0Price => Price(token0, token1, _tokenAmounts[1].value / _tokenAmounts[0].value);
